@@ -49,11 +49,12 @@ def getOrCreateDeck(deckName, model):
 def getOrCreateModel(modelName):
     model = mw.col.models.byName(modelName)
     if model:
-        if set([f['name'] for f in model['flds']]) == set(MODEL_FIELDS):
-            return model
-        else:
-            logger.warning('模版字段异常，自动删除重建')
-            mw.col.models.rem(model)
+        return model
+        # if set([f['name'] for f in model['flds']]) == set(MODEL_FIELDS):
+        #     return model
+        # else:
+        #     logger.warning('模版字段异常，自动删除重建')
+        #     mw.col.models.rem(model)
 
     logger.info(f'创建新模版:{modelName}')
     newModel = mw.col.models.new(modelName)
@@ -127,29 +128,36 @@ def addNoteToDeck(deckObject, modelObject, currentConfig: dict, oneQueryResult: 
     modelObject['did'] = deckObject['id']
 
     newNote = anki.notes.Note(mw.col, modelObject)
-    newNote['term'] = oneQueryResult['term']
+    # newNote['term'] = oneQueryResult['term']
+    newNote['Front'] = oneQueryResult['term']
     for configName in BASIC_OPTION + EXTRA_OPTION:
         logger.debug(f'字段:{configName}--结果:{oneQueryResult.get(configName)}')
         if oneQueryResult.get(configName):
-            # 短语例句
-            if configName in ['sentence', 'phrase'] and currentConfig[configName]:
-                newNote[f'{configName}Front'] = '\n'.join(
-                    [f'<tr><td>{e.strip()}</td></tr>' for e, _ in oneQueryResult[configName]])
-                newNote[f'{configName}Back'] = '\n'.join(
-                    [f'<tr><td>{e.strip()}<br>{c.strip()}</td></tr>' for e, c in oneQueryResult[configName]])
-            # 图片
-            elif configName == 'image':
-                newNote[configName] = f'src="{oneQueryResult[configName]}"'
-            # 释义
-            elif configName == 'definition' and currentConfig[configName]:
-                newNote[configName] = ' '.join(oneQueryResult[configName])
-            # 发音
-            elif configName in EXTRA_OPTION[:2]:
-                newNote[configName] = f"[sound:{configName}_{oneQueryResult['term']}.mp3]"
-            # 其他
-            elif currentConfig[configName]:
-                newNote[configName] = oneQueryResult[configName]
+            if configName == 'definition' and currentConfig[configName]:
+                newNote['Back'] = '<br>'.join(oneQueryResult[configName])
+            elif configName == 'AmEPhonetic' and currentConfig[configName]:
+                newNote['Front'] += '<br>' + '/' + oneQueryResult['AmEPhonetic'] + '/'
+            elif configName == 'AmEPron' and currentConfig[configName]:
+                newNote['Front'] += '<br>' + f"[sound:{configName}_{oneQueryResult['term']}.mp3]"
+            # # 短语例句
+            # if configName in ['sentence', 'phrase'] and currentConfig[configName]:
+            #     newNote[f'{configName}Front'] = '\n'.join(
+            #         [f'<tr><td>{e.strip()}</td></tr>' for e, _ in oneQueryResult[configName]])
+            #     newNote[f'{configName}Back'] = '\n'.join(
+            #         [f'<tr><td>{e.strip()}<br>{c.strip()}</td></tr>' for e, c in oneQueryResult[configName]])
+            # # 图片
+            # elif configName == 'image':
+            #     newNote[configName] = f'src="{oneQueryResult[configName]}"'
+            # # 释义
+            # elif configName == 'definition' and currentConfig[configName]:
+            #     newNote[configName] = ' '.join(oneQueryResult[configName])
+            # # 发音
+            # elif configName in EXTRA_OPTION[:2]:
+            #     newNote[configName] = f"[sound:{configName}_{oneQueryResult['term']}.mp3]"
+            # # 其他
+            # elif currentConfig[configName]:
+            #     newNote[configName] = oneQueryResult[configName]
 
     mw.col.addNote(newNote)
     mw.col.reset()
-    logger.info(f"添加笔记{newNote['term']}")
+    logger.info(f"添加笔记{newNote['Front']}")

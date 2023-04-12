@@ -16,12 +16,12 @@
     }
   ],
   "definition": true,
-  "sentence": true,
-  "image": true,
-  "phrase": true,
+  "sentence": false,
+  "image": false,
+  "phrase": false,
   "AmEPhonetic": true,
-  "BrEPhonetic": true,
+  "BrEPhonetic": false,
   "BrEPron": false,
   "AmEPron": false,
-  "noPron": true
+  "noPron": false
 }
